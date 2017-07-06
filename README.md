@@ -11,5 +11,5 @@ Based on the hard effort that has been done in [Spring-Cloud-Pipelines](https://
 6. Open jenkins and configure [credentials](http://localhost:8080/credentials/)
 7. [Configure](http://localhost:8080/job/jenkins-pipeline-seed/configure) the seed job parameters for the environment
 8. [Build](http://localhost:8080/job/jenkins-pipeline-seed/) the seed job
-9. [Build](http://localhost:8080/job/github-webhook-declarative-pipeline/) the github-webhook pipeline
-10. [Build](http://localhost:8080/job/github-analytics-declarative-pipeline/) the github-analytics pipeline
+9. [Build](http://localhost:8080/job/github-webhook-declarative-pipeline/) the [github-webhook](https://github.com/spring-cloud-samples/github-webhook) pipeline
+10. [Build](http://localhost:8080/job/github-analytics-declarative-pipeline/) the [github-analytics](https://github.com/spring-cloud-samples/github-analytics) pipeline
