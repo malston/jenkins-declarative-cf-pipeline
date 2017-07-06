@@ -2,7 +2,7 @@ import javaposse.jobdsl.dsl.DslFactory
 
 DslFactory factory = this
 
-String repos = 'https://github.com/malston/github-analytics'
+String repos = 'https://github.com/marcingrzejszczak/github-analytics,https://github.com/marcingrzejszczak/github-webhook'
 
 factory.job('jenkins-pipeline-seed') {
     scm {
