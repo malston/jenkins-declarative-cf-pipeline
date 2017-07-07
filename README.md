@@ -3,7 +3,7 @@
 Based on the hard effort that has been done in [Spring-Cloud-Pipelines](https://github.com/spring-cloud/spring-cloud-pipelines/tree/master/jenkins#declarative-pipeline--blue-ocean).
 
 ### Quick Demo
-1. Run `cd ~/workspace/jenkins-declarative-cf-pipeline/jenkins`
+1. Run `cd ./jenkins`
 2. Run `./start.sh <github-user> <github-deploy-key-or-password> <github-org>`
 3. Use the startup wizard to manually add libs-release-local http://localhost:8081/artifactory/ Maven repo to Artifactory.
 4. Run `./tools/deploy-infra.sh`
