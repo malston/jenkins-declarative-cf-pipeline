@@ -204,7 +204,7 @@ function deployAppWithName() {
     local manifestOption=$( if [[ "${useManifest}" == "false" ]] ; then echo "--no-manifest"; else echo "" ; fi )
     local lowerCaseAppName=$( echo "${appName}" | tr '[:upper:]' '[:lower:]' )
     local hostname="${lowerCaseAppName}"
-    local memory="${APP_MEMORY_LIMIT:-256m}"
+    local memory="${APP_MEMORY_LIMIT:-768m}"
     local buildPackUrl="${JAVA_BUILDPACK_URL:-https://github.com/cloudfoundry/java-buildpack.git#v3.8.1}"
     if [[ "${PAAS_HOSTNAME_UUID}" != "" ]]; then
         hostname="${hostname}-${PAAS_HOSTNAME_UUID}"
