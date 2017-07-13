@@ -31,7 +31,7 @@ task generateConcourseReadme(type: JRubyExec) {
 
 task generateIndex(type: JRubyExec, dependsOn: ["generateMainReadme", "generateJenkinsReadme", "generateConcourseReadme"]) {
 	script "${projectDir}/tools/generate-index.rb"
-	scriptArgs "${projectDir}/docs/spring-cloud-pipelines.adoc"
+	scriptArgs "${projectDir}/docs/jenkins-declarative-cf-pipeline.adoc"
 }
 
 task generateReadme(dependsOn: ["generateIndex"]) {
