@@ -40,6 +40,7 @@ function logInToPaas() {
 
 function testDeploy() {
     # TODO: Consider making it less JVM specific
+    version=$( retrieveVersion )
     projectGroupId=$( retrieveGroupId )
     appName=$( retrieveAppName )
     # Log in to PaaS to start deployment
@@ -65,8 +66,8 @@ function testDeploy() {
     deployService "STUBRUNNER" "${UNIQUE_STUBRUNNER_NAME}"
 
     # deploy app
-    downloadAppBinary 'true' ${REPO_WITH_BINARIES} ${projectGroupId} ${appName} ${PIPELINE_VERSION}
-    deployAndRestartAppWithNameForSmokeTests ${appName} "${appName}-${PIPELINE_VERSION}" "${UNIQUE_RABBIT_NAME}" "${UNIQUE_EUREKA_NAME}" "${UNIQUE_MYSQL_NAME}"
+    downloadAppBinary 'true' ${REPO_WITH_BINARIES} ${projectGroupId} ${appName} ${version}
+    deployAndRestartAppWithNameForSmokeTests ${appName} "${appName}-${version}" "${UNIQUE_RABBIT_NAME}" "${UNIQUE_EUREKA_NAME}" "${UNIQUE_MYSQL_NAME}"
     propagatePropertiesForTests ${appName}
 }
 
@@ -335,6 +336,9 @@ function runSmokeTests() {
     LATEST_PROD_VERSION=$( extractVersionFromProdTag ${LATEST_PROD_TAG} )
     echo "Last prod version equals ${LATEST_PROD_VERSION}"
 
+    local version=$( retrieveVersion )
+    echo "Current version equals ${version}"
+
     if [[ "${PROJECT_TYPE}" == "MAVEN" ]]; then
         if [[ "${CI}" == "CONCOURSE" ]]; then
             ./mvnw clean install -Psmoke -Dapplication.url="${applicationHost}" -Dstubrunner.url="${stubrunnerHost}" ${BUILD_OPTIONS} || ( echo "$( printTestResults )" && return 1)
@@ -343,9 +347,9 @@ function runSmokeTests() {
         fi
     elif [[ "${PROJECT_TYPE}" == "GRADLE" ]]; then
         if [[ "${CI}" == "CONCOURSE" ]]; then
-            ./gradlew smoke -PnewVersion=${PIPELINE_VERSION} -Dapplication.url="${applicationHost}" -Dstubrunner.url="${stubrunnerHost}" ${BUILD_OPTIONS} || ( echo "$( printTestResults )" && return 1)
+            ./gradlew smoke -PnewVersion=${version} -Dapplication.url="${applicationHost}" -Dstubrunner.url="${stubrunnerHost}" ${BUILD_OPTIONS} || ( echo "$( printTestResults )" && return 1)
         else
-            ./gradlew smoke -PnewVersion=${PIPELINE_VERSION} -Dapplication.url="${applicationHost}" -Dstubrunner.url="${stubrunnerHost}" ${BUILD_OPTIONS}
+            ./gradlew smoke -PnewVersion=${version} -Dapplication.url="${applicationHost}" -Dstubrunner.url="${stubrunnerHost}" ${BUILD_OPTIONS}
         fi
     else
         echo "Unsupported project build tool"
@@ -384,6 +388,8 @@ function stageDeploy() {
     # TODO: Consider making it less JVM specific
     projectGroupId=$( retrieveGroupId )
     appName=$( retrieveAppName )
+    version=$( retrieveVersion )
+
     # Log in to PaaS to start deployment
     logInToPaas
 
@@ -393,10 +399,10 @@ function stageDeploy() {
     deployService "MYSQL" "mysql-github"
     deployService "EUREKA" "${EUREKA_ARTIFACT_ID}"
 
-    downloadAppBinary 'true' ${REPO_WITH_BINARIES} ${projectGroupId} ${appName} ${PIPELINE_VERSION}
+    downloadAppBinary 'true' ${REPO_WITH_BINARIES} ${projectGroupId} ${appName} ${version}
 
     # deploy app
-    deployAndRestartAppWithName ${appName} "${appName}-${PIPELINE_VERSION}"
+    deployAndRestartAppWithName ${appName} "${appName}-${version}"
     propagatePropertiesForTests ${appName}
 }
 
@@ -415,9 +421,10 @@ function prepareForE2eTests() {
 function performGreenDeployment() {
     projectGroupId=$( retrieveGroupId )
     appName=$( retrieveAppName )
+    version=$( retrieveVersion )
 
     # download app
-    downloadAppBinary 'true' ${REPO_WITH_BINARIES} ${projectGroupId} ${appName} ${PIPELINE_VERSION}
+    downloadAppBinary 'true' ${REPO_WITH_BINARIES} ${projectGroupId} ${appName} ${version}
     # Log in to CF to start deployment
     logInToPaas
 
@@ -435,6 +442,7 @@ function performGreenDeployment() {
 function performGreenDeploymentOfTestedApplication() {
     local appName="${1}"
     local newName="${appName}-venerable"
+    local version=$( retrieveVersion )
     echo "Renaming the app from [${appName}] -> [${newName}]"
     local appPresent="no"
     cf app "${appName}" && appPresent="yes"
@@ -443,7 +451,7 @@ function performGreenDeploymentOfTestedApplication() {
     else
         echo "Will not rename the application cause it's not there"
     fi
-    deployAndRestartAppWithName "${appName}" "${appName}-${PIPELINE_VERSION}" "PROD"
+    deployAndRestartAppWithName "${appName}" "${appName}-${version}" "PROD"
 }
 
 function deleteBlueInstance() {

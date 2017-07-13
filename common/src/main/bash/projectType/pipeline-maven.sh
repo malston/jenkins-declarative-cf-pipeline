@@ -6,8 +6,9 @@ export MAVEN_OPTS="${MAVEN_OPTS} -Djava.security.egd=file:///dev/urandom"
 
 function build() {
     echo "Additional Build Options [${BUILD_OPTIONS}]"
+    version=$( retrieveVersion )
 
-    ./mvnw versions:set -DnewVersion=${PIPELINE_VERSION} ${BUILD_OPTIONS}
+    ./mvnw versions:set -DnewVersion=${version} ${BUILD_OPTIONS}
     if [[ "${CI}" == "CONCOURSE" ]]; then
         ./mvnw clean verify deploy -Ddistribution.management.release.id=${M2_SETTINGS_REPO_ID} -Ddistribution.management.release.url=${REPO_WITH_BINARIES} ${BUILD_OPTIONS} || ( $( printTestResults ) && return 1)
     else
@@ -59,6 +60,21 @@ function extractMavenProperty() {
 
 function retrieveGroupId() {
     local result=$( ruby -r rexml/document -e 'puts REXML::Document.new(File.new(ARGV.shift)).elements["/project/groupId"].text' pom.xml || ./mvnw ${BUILD_OPTIONS} org.apache.maven.plugins:maven-help-plugin:2.2:evaluate -Dexpression=project.groupId |grep -Ev '(^\[|Download\w+:)' )
+    result=$( echo "${result}" | tail -1 )
+    echo "${result}"
+}
+
+function retrieveVersion() {
+    local version=${PIPELINE_VERSION}
+    if [ "${USE_PIPELINE_VERSION}" = false ]; then
+      local currentVersion=$( retrieveCurrentVersion )
+      version=${currentVersion:-${PIPELINE_VERSION}}
+    fi
+    echo "${version}"
+}
+
+function retrieveCurrentVersion() {
+    local result=$( ./gradlew currentVersion -q )
     result=$( echo "${result}" | tail -1 )
     echo "${result}"
 }

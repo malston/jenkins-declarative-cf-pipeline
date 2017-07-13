@@ -3,11 +3,12 @@ set -e
 
 function build() {
     echo "Additional Build Options [${BUILD_OPTIONS}]"
+    version=$( retrieveVersion )
 
     if [[ "${CI}" == "CONCOURSE" ]]; then
-        ./gradlew clean build deploy -PnewVersion=${PIPELINE_VERSION} -DREPO_WITH_BINARIES=${REPO_WITH_BINARIES} --stacktrace ${BUILD_OPTIONS} || ( $( printTestResults ) && return 1)
+        ./gradlew clean build deploy -PnewVersion=${version} -DREPO_WITH_BINARIES=${REPO_WITH_BINARIES} --stacktrace ${BUILD_OPTIONS} || ( $( printTestResults ) && return 1)
     else
-        ./gradlew clean build deploy -PnewVersion=${PIPELINE_VERSION} -DREPO_WITH_BINARIES=${REPO_WITH_BINARIES} --stacktrace ${BUILD_OPTIONS}
+        ./gradlew clean build deploy -PnewVersion=${version} -DREPO_WITH_BINARIES=${REPO_WITH_BINARIES} --stacktrace ${BUILD_OPTIONS}
     fi
 }
 
@@ -40,6 +41,21 @@ function retrieveGroupId() {
     echo "${result}"
 }
 
+function retrieveVersion() {
+    local version=${PIPELINE_VERSION}
+    if [ "${USE_PIPELINE_VERSION}" = false ]; then
+      local currentVersion=$( retrieveCurrentVersion )
+      version=${currentVersion:-${PIPELINE_VERSION}}
+    fi
+    echo "${version}"
+}
+
+function retrieveCurrentVersion() {
+    local result=$( ./gradlew currentVersion -q )
+    result=$( echo "${result}" | tail -1 )
+    echo "${result}"
+}
+
 function retrieveAppName() {
     local result=$( ./gradlew artifactId -q )
     result=$( echo "${result}" | tail -1 )
@@ -57,23 +73,25 @@ function retrieveStubRunnerIds() {
 function runSmokeTests() {
     local applicationHost="${APPLICATION_URL}"
     local stubrunnerHost="${STUBRUNNER_URL}"
+    local version=$( retrieveVersion )
     echo "Running smoke tests"
 
     if [[ "${CI}" == "CONCOURSE" ]]; then
-        ./gradlew smoke -PnewVersion=${PIPELINE_VERSION} -Dapplication.url="${applicationHost}" -Dstubrunner.url="${stubrunnerHost}" || ( echo "$( printTestResults )" && return 1)
+        ./gradlew smoke -PnewVersion=${version} -Dapplication.url="${applicationHost}" -Dstubrunner.url="${stubrunnerHost}" || ( echo "$( printTestResults )" && return 1)
     else
-        ./gradlew smoke -PnewVersion=${PIPELINE_VERSION} -Dapplication.url="${applicationHost}" -Dstubrunner.url="${stubrunnerHost}"
+        ./gradlew smoke -PnewVersion=${version} -Dapplication.url="${applicationHost}" -Dstubrunner.url="${stubrunnerHost}"
     fi
 }
 
 function runE2eTests() {
     local applicationHost="${APPLICATION_URL}"
+    local version=$( retrieveVersion )
     echo "Running e2e tests"
 
     if [[ "${CI}" == "CONCOURSE" ]]; then
-        ./gradlew e2e -PnewVersion=${PIPELINE_VERSION} -Dapplication.url="${applicationHost}" ${BUILD_OPTIONS} || ( $( printTestResults ) && return 1)
+        ./gradlew e2e -PnewVersion=${version} -Dapplication.url="${applicationHost}" ${BUILD_OPTIONS} || ( $( printTestResults ) && return 1)
     else
-        ./gradlew e2e -PnewVersion=${PIPELINE_VERSION} -Dapplication.url="${applicationHost}" ${BUILD_OPTIONS}
+        ./gradlew e2e -PnewVersion=${version} -Dapplication.url="${applicationHost}" ${BUILD_OPTIONS}
     fi
 }
 
