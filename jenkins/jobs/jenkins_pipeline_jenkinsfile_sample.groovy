@@ -13,6 +13,7 @@ List<String> parsedRepos = repos.split(",")
 String jenkinsfileDir = binding.variables["JENKINSFILE_DIR"] ?: "${WORKSPACE}/jenkins/declarative-pipeline"
 
 Map<String, String> envs = [:]
+envs['USE_PIPELINE_VERSION'] = binding.variables["USE_PIPELINE_VERSION"] ?: 'true'
 envs['PIPELINE_VERSION_FORMAT'] = binding.variables["PIPELINE_VERSION"] ?: '''${BUILD_DATE_FORMATTED, \"yyMMdd_HHmmss\"}-VERSION'''
 envs['PIPELINE_VERSION_PREFIX'] = binding.variables["PIPELINE_VERSION"] ?: '''1.0.0.M1'''
 envs['PAAS_TEST_API_URL'] = binding.variables['PAAS_TEST_API_URL'] ?: 'api.local.pcfdev.io'
