@@ -2,9 +2,17 @@
 <settings>
 	<servers>
 		<server>
-			<id>artifactory-local</id>
-			<username>admin</username>
-			<password>password</password>
+			<id>${M2_SETTINGS_REPO_ID}</id>
+			<username>${M2_SETTINGS_REPO_USERNAME}</username>
+			<password>${M2_SETTINGS_REPO_PASSWORD}</password>
+		</server>
+		<server>
+			<id>${DOCKER_SERVER_ID}</id>
+			<username>${DOCKER_USERNAME}</username>
+			<password>${DOCKER_PASSWORD}</password>
+			<configuration>
+				<email>${DOCKER_EMAIL}</email>
+			</configuration>
 		</server>
 	</servers>
 </settings>

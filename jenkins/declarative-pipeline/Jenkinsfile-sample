@@ -1,21 +1,24 @@
 pipeline {
 	agent any
 	tools {
-		jdk 'jdk8'
+		// TODO: how to make this parametrizable?
+		jdk "jdk8"
 	}
 	stages {
 		stage("Build and Upload") {
 			steps {
 				checkout([
 					$class: 'GitSCM',
+					clearWorkspace: true,
 					branches: [
-						[name: '*/master']
+						[name: "*/${env.GIT_BRANCH_NAME ?: 'master'}"]
 					],
 					extensions: [
 						[$class: 'WipeWorkspace'],
 					],
 					userRemoteConfigs: [
-						[credentialsId: env.GIT_CREDENTIAL_ID, url: env.GIT_REPOSITORY]
+						[credentialsId: Boolean.parseBoolean(env.GIT_USE_SSH_KEY) == Boolean.TRUE ?
+							env.GIT_SSH_CREDENTIAL_ID : env.GIT_CREDENTIAL_ID, url: env.GIT_REPOSITORY]
 					]
 				])
 
@@ -34,35 +37,71 @@ pipeline {
 				])
 
 				script {
-					env.PIPELINE_VERSION = VersionNumber(
-						versionNumberString: '${BUILD_DATE_FORMATTED, \"yyMMdd_HHmmss\"}-VERSION',
-						versionPrefix: '1.0.0.M1-'
-					)
-
-					withCredentials([usernamePassword(credentialsId: env.REPO_WITH_BINARIES_CREDENTIALS_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-						env.M2_SETTINGS_REPO_USERNAME = USER
-						env.M2_SETTINGS_REPO_PASSWORD = PASS
+					if (!env.PIPELINE_VERSION) {
+						env.PIPELINE_VERSION = VersionNumber(
+							versionNumberString: env.PIPELINE_VERSION_FORMAT ?: '${BUILD_DATE_FORMATTED, \"yyMMdd_HHmmss\"}-VERSION',
+							versionPrefix: env.PIPELINE_VERSION_PREFIX ?: '1.0.0.M1-'
+						)
 					}
 
-					withCredentials([usernamePassword(credentialsId: env.PAAS_TEST_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-						env.PAAS_TEST_USERNAME = USER
-						env.PAAS_TEST_PASSWORD = PASS
+					if (env.REPO_WITH_BINARIES_CREDENTIAL_ID) {
+						withCredentials([usernamePassword(credentialsId: env.REPO_WITH_BINARIES_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+							env.M2_SETTINGS_REPO_USERNAME = USER
+							env.M2_SETTINGS_REPO_PASSWORD = PASS
+						}
 					}
 
-					withCredentials([usernamePassword(credentialsId: env.PAAS_STAGE_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-						env.PAAS_STAGE_USERNAME = USER
-						env.PAAS_STAGE_PASSWORD = PASS
+					// remove::start[CF]
+					if (env.PAAS_TEST_CREDENTIAL_ID) {
+						withCredentials([usernamePassword(credentialsId: env.PAAS_TEST_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+							env.PAAS_TEST_USERNAME = USER
+							env.PAAS_TEST_PASSWORD = PASS
+						}
 					}
 
-					withCredentials([usernamePassword(credentialsId: env.PAAS_PROD_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-						env.PAAS_PROD_USERNAME = USER
-						env.PAAS_PROD_PASSWORD = PASS
+					if (env.PAAS_STAGE_CREDENTIAL_ID) {
+						withCredentials([usernamePassword(credentialsId: env.PAAS_STAGE_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+							env.PAAS_STAGE_USERNAME = USER
+							env.PAAS_STAGE_PASSWORD = PASS
+						}
 					}
 
-					withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-						env.GIT_USERNAME = USER
-						env.GIT_PASSWORD = PASS
+					if (env.PAAS_PROD_CREDENTIAL_ID) {
+						withCredentials([usernamePassword(credentialsId: env.PAAS_PROD_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+							env.PAAS_PROD_USERNAME = USER
+							env.PAAS_PROD_PASSWORD = PASS
+						}
 					}
+					// remove::end[CF]
+
+					if (env.GIT_CREDENTIAL_ID) {
+						withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+							env.GIT_USERNAME = USER
+							env.GIT_PASSWORD = PASS
+						}
+					}
+
+					// remove::start[K8S]
+					if (env.DOCKER_REGISTRY_CREDENTIAL_ID) {
+						withCredentials([usernamePassword(credentialsId: env.DOCKER_REGISTRY_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+							env.DOCKER_USERNAME = USER
+							env.DOCKER_PASSWORD = PASS
+						}
+					}
+					if (env.MYSQL_CREDENTIAL_ID) {
+						withCredentials([usernamePassword(credentialsId: env.MYSQL_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+							env.MYSQL_USER = USER
+							env.MYSQL_PASSWORD = PASS
+						}
+					}
+
+					if (env.MYSQL_ROOT_CREDENTIAL_ID) {
+						withCredentials([usernamePassword(credentialsId: env.MYSQL_ROOT_CREDENTIAL_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+							env.MYSQL_ROOT_USER = USER
+							env.MYSQL_ROOT_PASSWORD = PASS
+						}
+					}
+					// remove::end[K8S]
 
 					env.DEPLOY_TO_PROD = input message: '', parameters: [
 						choice(
@@ -72,10 +111,17 @@ pipeline {
 						)
 					]
 				}
-
-				sh '''#!/bin/bash
-				${WORKSPACE}@tools/common/src/main/bash/build_and_upload.sh
-				'''
+				sh """#!/bin/bash
+				${
+					if (Boolean.parseBoolean(env.GIT_USE_SSH_KEY) == Boolean.TRUE) {
+						return """
+						eval "\$(ssh-agent -s)"
+						ssh-add /usr/share/jenkins/gitsshkey
+						"""
+					}	
+				}
+				\${WORKSPACE}@tools/common/src/main/bash/build_and_upload.sh
+				"""
 			}
 		}
 
@@ -104,6 +150,10 @@ pipeline {
 		}
 
 		stage("Deploy to test latest prod version") {
+			when {
+				environment name: 'DB_ROLLBACK_STEP_REQUIRED',
+					value: 'true'
+			}
 			steps {
 				sh '''#!/bin/bash
 				${WORKSPACE}@tools/common/src/main/bash/test_rollback_deploy.sh
@@ -112,6 +162,10 @@ pipeline {
 		}
 
 		stage("Tests on test latest prod version") {
+			when {
+				environment name: 'DB_ROLLBACK_STEP_REQUIRED',
+					value: 'true'
+			}
 			steps {
 				sh '''#!/bin/bash
 				${WORKSPACE}@tools/common/src/main/bash/test_rollback_smoke.sh
@@ -120,6 +174,10 @@ pipeline {
 		}
 
 		stage("Deploy to stage") {
+			when {
+				environment name: 'DEPLOY_TO_STAGE_STEP_REQUIRED',
+					value: 'true'
+			}
 			steps {
 				sh '''#!/bin/bash
 				${WORKSPACE}@tools/common/src/main/bash/stage_deploy.sh
@@ -128,6 +186,10 @@ pipeline {
 		}
 
 		stage("End to end tests on stage") {
+			when {
+				environment name: 'DEPLOY_TO_STAGE_STEP_REQUIRED',
+					value: 'true'
+			}
 			steps {
 				sh '''#!/bin/bash
 				${WORKSPACE}@tools/common/src/main/bash/stage_e2e.sh
@@ -142,12 +204,23 @@ pipeline {
 			}
 			steps {
 				sh """
-				# https://issues.jenkins-ci.org/browse/JENKINS-28335
-				git config --local credential.helper cache
-				echo 'protocol=https\nhost=github.com\nusername=${GIT_USERNAME}\npassword=${GIT_PASSWORD}\n\n' | git credential approve
-				git tag prod/\${PIPELINE_VERSION}
-				git push --tags
-				"""
+					${
+						if (Boolean.parseBoolean(env.GIT_USE_SSH_KEY) == Boolean.TRUE) {
+							return """
+							eval "\$(ssh-agent -s)"
+							ssh-add /usr/share/jenkins/gitsshkey
+							"""
+						} else {
+							return """
+							# https://issues.jenkins-ci.org/browse/JENKINS-28335
+							git config --local credential.helper cache
+							echo 'protocol=https\nhost=github.com\nusername=${GIT_USERNAME}\npassword=${GIT_PASSWORD}\n\n' | git credential approve
+							"""
+						}
+					}
+					git tag prod/\${PIPELINE_VERSION}
+					git push --tags
+					"""
 
 				sh '''#!/bin/bash
 				${WORKSPACE}@tools/common/src/main/bash/prod_deploy.sh
@@ -170,6 +243,8 @@ pipeline {
 	post {
 		always {
 			junit '**/surefire-reports/*.xml,**/test-results/**/*.xml'
+			archive "**/build/**/k8s/*.yml"
+			archive "**/target/**/k8s/*.yml"
 		}
 	}
 }
