@@ -5,8 +5,8 @@
 require 'asciidoctor'
 require 'optparse'
 
-GH_ORGAZNIZATION = 'malston'
-GH_REPOSITORY = 'jenkins-declarative-cf-pipeline'
+GH_ORGAZNIZATION = 'spring-cloud'
+GH_REPOSITORY = 'spring-cloud-pipelines'
 GH_BRANCH = 'master'
 DOCS_BASE_URL = [
   'https://raw.githubusercontent.com',
