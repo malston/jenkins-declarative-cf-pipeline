@@ -1,1 +1,1 @@
-include 'common', 'jenkins', 'tools'
+include 'common', 'docs', 'docs-sources', 'jenkins', 'tools'
