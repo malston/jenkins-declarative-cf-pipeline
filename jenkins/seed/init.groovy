@@ -179,10 +179,10 @@ Groovy.DescriptorImpl descriptor =
 	(Groovy.DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(Groovy)
 descriptor.configure(null, net.sf.json.JSONObject.fromObject('''{"allowMacro":"true"}'''))
 
-println "Creating the seed job"
-new DslScriptLoader(jobManagement).with {
-	runScript(modifiedSeedJob)
-}
+// println "Creating the seed job"
+// new DslScriptLoader(jobManagement).with {
+// 	runScript(modifiedSeedJob)
+// }
 println "Creating the meta seed job"
 new DslScriptLoader(jobManagement).with {
 	runScript(metaSeedJob)
