@@ -11,6 +11,7 @@ import jenkins.model.Jenkins
 import java.nio.file.Files
 
 def jobScript = new File('/usr/share/jenkins/jenkins_pipeline.groovy')
+def metaSeedScript = new File('/usr/share/jenkins/meta_seed.groovy')
 def jobManagement = new JenkinsJobManagement(System.out, [:], new File('.'))
 String jenkinsHome = '/root'
 Closure setCredsIfMissing = { String id, String descr, String user, String pass ->
@@ -56,6 +57,11 @@ if (m2HomeFile.exists()) {
 } else {
 	println "Failed to create .m2 folder!"
 }
+
+String metaSeedJob = = metaSeedScript.text
+	.replace('https://github.com/marcingrzejszczak', "https://github.com/${System.getenv('FORKED_ORG') ?: "marcingrzejszczak"}")
+// the default will work for K8S and docker-compose
+	.replace('http://artifactory', "http://${System.getenv('EXTERNAL_IP') ?: "artifactory"}")
 
 String modifiedSeedJob = jobScript.text
 	.replace('https://github.com/marcingrzejszczak', "https://github.com/${System.getenv('FORKED_ORG') ?: "marcingrzejszczak"}")
@@ -113,7 +119,7 @@ if (gitSshKey) {
 }
 setCredsIfMissing("git", "GIT credential", gitUser, gitPass)
 
-// remove::start[K8S]
+remove::start[K8S]
 def certificateAuthority = new File('/usr/share/jenkins/cert/ca.crt')
 def clientCertificate = new File('/usr/share/jenkins/cert/apiserver.crt')
 def clientKey = new File('/usr/share/jenkins/cert/apiserver.key')
@@ -163,8 +169,7 @@ println "Creating the seed job"
 modifiedSeedJob = modifiedSeedJob
 	.replace('scpipelines', "${System.getenv('DOCKER_REGISTRY_ORGANIZATION') ?: "scpipelines"}")
 	.replace("change@me.com", dockerRegistryEmail)
-// remove::end[K8S]
-
+remove::end[K8S]
 
 println "Adding jdk"
 Jenkins.getInstance().getJDKs().add(new JDK("jdk8", "/usr/lib/jvm/java-8-openjdk-amd64"))
@@ -177,4 +182,8 @@ descriptor.configure(null, net.sf.json.JSONObject.fromObject('''{"allowMacro":"t
 println "Creating the seed job"
 new DslScriptLoader(jobManagement).with {
 	runScript(modifiedSeedJob)
+}
+println "Creating the meta seed job"
+new DslScriptLoader(jobManagement).with {
+	runScript(metaSeedJob)
 }
