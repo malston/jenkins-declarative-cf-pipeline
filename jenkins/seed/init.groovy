@@ -58,7 +58,7 @@ if (m2HomeFile.exists()) {
 	println "Failed to create .m2 folder!"
 }
 
-String metaSeedJob = = metaSeedScript.text
+String metaSeedJob = metaSeedScript.text
 	.replace('https://github.com/marcingrzejszczak', "https://github.com/${System.getenv('FORKED_ORG') ?: "marcingrzejszczak"}")
 // the default will work for K8S and docker-compose
 	.replace('http://artifactory', "http://${System.getenv('EXTERNAL_IP') ?: "artifactory"}")
