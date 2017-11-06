@@ -119,7 +119,7 @@ if (gitSshKey) {
 }
 setCredsIfMissing("git", "GIT credential", gitUser, gitPass)
 
-remove::start[K8S]
+// remove::start[K8S]
 def certificateAuthority = new File('/usr/share/jenkins/cert/ca.crt')
 def clientCertificate = new File('/usr/share/jenkins/cert/apiserver.crt')
 def clientKey = new File('/usr/share/jenkins/cert/apiserver.key')
@@ -169,7 +169,7 @@ println "Creating the seed job"
 modifiedSeedJob = modifiedSeedJob
 	.replace('scpipelines', "${System.getenv('DOCKER_REGISTRY_ORGANIZATION') ?: "scpipelines"}")
 	.replace("change@me.com", dockerRegistryEmail)
-remove::end[K8S]
+// remove::end[K8S]
 
 println "Adding jdk"
 Jenkins.getInstance().getJDKs().add(new JDK("jdk8", "/usr/lib/jvm/java-8-openjdk-amd64"))
