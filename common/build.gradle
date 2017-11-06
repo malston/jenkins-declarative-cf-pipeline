@@ -39,5 +39,5 @@ task bats {
 }
 
 installBatsIfMissing.dependsOn("initalizeSubModules")
-bats.dependsOn("installBatsIfMissing")
-test.dependsOn("bats")
+// bats.dependsOn("installBatsIfMissing")
+// test.dependsOn("bats")
