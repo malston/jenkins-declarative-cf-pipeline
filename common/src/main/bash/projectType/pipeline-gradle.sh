@@ -52,7 +52,14 @@ function retrieveGroupId() {
 }
 
 function retrieveAppName() {
-	"${GRADLEW_BIN}" artifactId -q | tail -1
+	local deploymentArtifactId="${1}"
+	local projectOption
+	projectOption=$(if [[ ! -z "${deploymentArtifactId}" ]]; then
+		echo "-p ${deploymentArtifactId}";
+	else
+		echo "";
+	fi)
+	"${GRADLEW_BIN}" artifactId -q ${projectOption} | tail -1
 }
 
 function printTestResults() {
