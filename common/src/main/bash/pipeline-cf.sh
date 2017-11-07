@@ -31,6 +31,8 @@ function testDeploy() {
 	projectGroupId=$(retrieveGroupId)
 	local appName
 	appName=$(retrieveAppName ${DEPLOYMENT_ARTIFACT_ID})
+	local projectArtifactId
+	projectArtifactId=$(retrieveArtifactId ${DEPLOYMENT_ARTIFACT_ID})
 	# Log in to PaaS to start deployment
 	logInToPaas
 
@@ -40,7 +42,7 @@ function testDeploy() {
 	deployServices
 
 	# deploy app
-	downloadAppBinary "${REPO_WITH_BINARIES}" "${projectGroupId}" "${appName}" "${PIPELINE_VERSION}"
+	downloadAppBinary "${REPO_WITH_BINARIES}" "${projectGroupId}" "${projectArtifactId}" "${PIPELINE_VERSION}"
 	deployAndRestartAppWithNameForSmokeTests "${appName}" "${appName}-${PIPELINE_VERSION}" "${UNIQUE_RABBIT_NAME}" "${UNIQUE_EUREKA_NAME}" "${UNIQUE_MYSQL_NAME}"
 	propagatePropertiesForTests "${appName}"
 }
