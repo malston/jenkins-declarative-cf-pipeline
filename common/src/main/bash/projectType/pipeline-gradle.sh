@@ -52,19 +52,19 @@ function retrieveGroupId() {
 }
 
 function retrieveArtifactId() {
-	local deploymentArtifactId="${1}"
-	if [[ ! -z "${deploymentArtifactId}" ]]; then
-		echo "${deploymentArtifactId}"
+	local projectName="${1}"
+	if [[ ! -z "${projectName}" ]]; then
+		echo "${projectName}"
 	else
 		retrieveAppName
 	fi
 }
 
 function retrieveAppName() {
-	local deploymentArtifactId="${1}"
+	local projectName="${1}"
 	local projectOption
-	projectOption=$(if [[ ! -z "${deploymentArtifactId}" ]]; then
-		echo "-p ${deploymentArtifactId}";
+	projectOption=$(if [[ ! -z "${projectName}" ]]; then
+		echo "-p ${projectName}";
 	else
 		echo "";
 	fi)

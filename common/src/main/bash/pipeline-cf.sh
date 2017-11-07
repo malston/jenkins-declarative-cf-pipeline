@@ -30,9 +30,9 @@ function testDeploy() {
 	local projectGroupId
 	projectGroupId=$(retrieveGroupId)
 	local appName
-	appName=$(retrieveAppName ${DEPLOYMENT_ARTIFACT_ID})
+	appName=$(retrieveAppName ${DEPLOYMENT_PROJECT_NAME})
 	local projectArtifactId
-	projectArtifactId=$(retrieveArtifactId ${DEPLOYMENT_ARTIFACT_ID})
+	projectArtifactId=$(retrieveArtifactId ${DEPLOYMENT_PROJECT_NAME})
 	# Log in to PaaS to start deployment
 	logInToPaas
 

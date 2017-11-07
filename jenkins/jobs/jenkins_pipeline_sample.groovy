@@ -831,7 +831,7 @@ class PipelineDefaults {
 		setIfPresent(envs, variables, "M2_SETTINGS_REPO_ID")
 		setIfPresent(envs, variables, "REPO_WITH_BINARIES")
 		setIfPresent(envs, variables, "REPO_WITH_BINARIES_CREDENTIAL_ID")
-		setIfPresent(envs, variables, "DEPLOYMENT_ARTIFACT_ID")
+		setIfPresent(envs, variables, "DEPLOYMENT_PROJECT_NAME")
 		// remove::start[CF]
 		setIfPresent(envs, variables, "PAAS_TEST_API_URL")
 		setIfPresent(envs, variables, "PAAS_STAGE_API_URL")
