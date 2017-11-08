@@ -520,7 +520,7 @@ function deleteBlueInstance() {
 function propagatePropertiesForTests() {
 	local appName="${1}"
 	local projectArtifactId="${2}"
-	local stubRunnerHost="${3:-stubrunner-${projectArtifactId}}"
+	local stubRunnerHost="${3:-stubrunner-${appName}}"
 	local fileLocation="${4:-${OUTPUT_FOLDER}/test.properties}"
 	echo "Propagating properties for tests. Application [${appName}] for project [${projectArtifactId}] stub runner host [${stubRunnerHost}] properties location [${fileLocation}]"
 	# retrieve host of the app / stubrunner
