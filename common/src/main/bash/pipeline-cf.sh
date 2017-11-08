@@ -44,7 +44,7 @@ function testDeploy() {
 	# deploy app
 	downloadAppBinary "${REPO_WITH_BINARIES}" "${projectGroupId}" "${projectArtifactId}" "${PIPELINE_VERSION}" "${appName}"
 	deployAndRestartAppWithNameForSmokeTests "${appName}" "${appName}-${PIPELINE_VERSION}" "${UNIQUE_RABBIT_NAME}" "${UNIQUE_EUREKA_NAME}" "${UNIQUE_MYSQL_NAME}"
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName} ${projectArtifactId}"
 }
 
 function testRollbackDeploy() {
@@ -64,7 +64,7 @@ function testRollbackDeploy() {
 	downloadAppBinary "${REPO_WITH_BINARIES}" "${projectGroupId}" "${projectArtifactId}" "${LATEST_PROD_VERSION}" "${appName}"
 	logInToPaas
 	deployAndRestartAppWithNameForSmokeTests "${appName}" "${appName}-${LATEST_PROD_VERSION}"
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName} ${projectArtifactId}"
 	# Adding latest prod tag
 	echo "LATEST_PROD_TAG=${latestProdTag}" >>"${OUTPUT_FOLDER}/test.properties"
 }
@@ -379,9 +379,11 @@ function prepareForSmokeTests() {
 	echo "Retrieving group and artifact id - it can take a while..."
 	local appName
 	appName=$(retrieveAppName ${DEPLOYMENT_PROJECT_NAME})
+	local projectArtifactId
+	projectArtifactId=$(retrieveArtifactId ${DEPLOYMENT_PROJECT_NAME})
 	mkdir -p "${OUTPUT_FOLDER}"
 	logInToPaas
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName} ${projectArtifactId}"
 	# shellcheck disable=SC2119
 	readTestPropertiesFromFile
 	echo "Application URL [${APPLICATION_URL}]"
@@ -430,17 +432,20 @@ function stageDeploy() {
 
 	# deploy app
 	deployAndRestartAppWithName "${appName}" "${appName}-${PIPELINE_VERSION}"
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName} ${projectArtifactId}"
 }
 
 function retrieveApplicationUrl() {
 	echo "Retrieving artifact id - it can take a while..."
 	local appName
 	appName=$(retrieveAppName ${DEPLOYMENT_PROJECT_NAME})
-	echo "Project artifactId is ${appName}"
+	echo "App name is ${appName}"
+	local projectArtifactId
+	projectArtifactId=$(retrieveArtifactId ${DEPLOYMENT_PROJECT_NAME})
+	echo "Project artifactId is ${projectArtifactId}"
 	mkdir -p "${OUTPUT_FOLDER}"
 	logInToPaas
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName} ${projectArtifactId}"
 	# shellcheck disable=SC2119
 	readTestPropertiesFromFile
 	echo "${APPLICATION_URL}"
@@ -513,7 +518,8 @@ function deleteBlueInstance() {
 }
 
 function propagatePropertiesForTests() {
-	local projectArtifactId="${1}"
+	local appName="${1}"
+	local projectArtifactId="${2}"
 	local stubRunnerHost="${2:-stubrunner-${projectArtifactId}}"
 	local fileLocation="${3:-${OUTPUT_FOLDER}/test.properties}"
 	echo "Propagating properties for tests. Project [${projectArtifactId}] stub runner host [${stubRunnerHost}] properties location [${fileLocation}]"
@@ -521,7 +527,7 @@ function propagatePropertiesForTests() {
 	# we have to store them in a file that will be picked as properties
 	rm -rf "${fileLocation}"
 	local host=
-	host="$(appHost "${projectArtifactId}")"
+	host="$(appHost "${appName}")"
 	export APPLICATION_URL="${host}"
 	echo "APPLICATION_URL=${host}" >>"${fileLocation}"
 	host=$(appHost "${stubRunnerHost}")

@@ -57,7 +57,7 @@ function testDeploy() {
 	# deploy app
 	downloadAppBinary "${REPO_WITH_BINARIES}" "${projectGroupId}" "${appName}" "${PIPELINE_VERSION}"
 	deployAndRestartAppWithNameForSmokeTests "${appName}" "${appName}-${PIPELINE_VERSION}" "${UNIQUE_RABBIT_NAME}" "${UNIQUE_EUREKA_NAME}" "${UNIQUE_MYSQL_NAME}"
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName}" "${projectGroupId}" "${projectGroupId}"
 }
 
 function testRollbackDeploy() {
@@ -73,7 +73,7 @@ function testRollbackDeploy() {
 	downloadAppBinary "${REPO_WITH_BINARIES}" "${projectGroupId}" "${appName}" "${LATEST_PROD_VERSION}"
 	logInToPaas
 	deployAndRestartAppWithNameForSmokeTests "${appName}" "${appName}-${LATEST_PROD_VERSION}"
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName}" "${projectGroupId}"
 	# Adding latest prod tag
 	echo "LATEST_PROD_TAG=${latestProdTag}" >>"${OUTPUT_FOLDER}/test.properties"
 }
@@ -373,7 +373,7 @@ function prepareForSmokeTests() {
 	appName="$(retrieveAppName)"
 	mkdir -p "${OUTPUT_FOLDER}"
 	logInToPaas
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName}" "${projectGroupId}"
 	# shellcheck disable=SC2119
 	readTestPropertiesFromFile
 	echo "Application URL [${APPLICATION_URL}]"
@@ -420,7 +420,7 @@ function stageDeploy() {
 
 	# deploy app
 	deployAndRestartAppWithName "${appName}" "${appName}-${PIPELINE_VERSION}"
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName}" "${projectGroupId}"
 }
 
 function retrieveApplicationUrl() {
@@ -430,7 +430,7 @@ function retrieveApplicationUrl() {
 	echo "Project artifactId is ${appName}"
 	mkdir -p "${OUTPUT_FOLDER}"
 	logInToPaas
-	propagatePropertiesForTests "${appName}"
+	propagatePropertiesForTests "${appName}" "${projectGroupId}"
 	# shellcheck disable=SC2119
 	readTestPropertiesFromFile
 	echo "${APPLICATION_URL}"
