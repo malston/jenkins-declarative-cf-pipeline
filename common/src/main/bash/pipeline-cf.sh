@@ -521,7 +521,7 @@ function propagatePropertiesForTests() {
 	local appName="${1}"
 	local projectArtifactId="${2}"
 	local projectName
-  projectName=$(echo ${appName:0:`expr ${#appName} - ${#projectArtifactId} - 1`})
+	projectName=$(echo ${appName:0:`expr ${#appName} - ${#projectArtifactId} - 1`})
 	local stubRunnerHost="${3:-stubrunner-${projectName}}"
 	local fileLocation="${4:-${OUTPUT_FOLDER}/test.properties}"
 	echo "Propagating properties for tests. Application [${appName}] for project [${projectArtifactId}] stub runner host [${stubRunnerHost}] properties location [${fileLocation}]"
