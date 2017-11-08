@@ -44,7 +44,7 @@ function testDeploy() {
 	# deploy app
 	downloadAppBinary "${REPO_WITH_BINARIES}" "${projectGroupId}" "${projectArtifactId}" "${PIPELINE_VERSION}" "${appName}"
 	deployAndRestartAppWithNameForSmokeTests "${appName}" "${appName}-${PIPELINE_VERSION}" "${UNIQUE_RABBIT_NAME}" "${UNIQUE_EUREKA_NAME}" "${UNIQUE_MYSQL_NAME}"
-	propagatePropertiesForTests "${appName} ${projectArtifactId}"
+	propagatePropertiesForTests "${appName}" "${projectArtifactId}"
 }
 
 function testRollbackDeploy() {
@@ -64,7 +64,7 @@ function testRollbackDeploy() {
 	downloadAppBinary "${REPO_WITH_BINARIES}" "${projectGroupId}" "${projectArtifactId}" "${LATEST_PROD_VERSION}" "${appName}"
 	logInToPaas
 	deployAndRestartAppWithNameForSmokeTests "${appName}" "${appName}-${LATEST_PROD_VERSION}"
-	propagatePropertiesForTests "${appName} ${projectArtifactId}"
+	propagatePropertiesForTests "${appName}" "${projectArtifactId}"
 	# Adding latest prod tag
 	echo "LATEST_PROD_TAG=${latestProdTag}" >>"${OUTPUT_FOLDER}/test.properties"
 }
@@ -383,7 +383,7 @@ function prepareForSmokeTests() {
 	projectArtifactId=$(retrieveArtifactId ${DEPLOYMENT_PROJECT_NAME})
 	mkdir -p "${OUTPUT_FOLDER}"
 	logInToPaas
-	propagatePropertiesForTests "${appName} ${projectArtifactId}"
+	propagatePropertiesForTests "${appName}" "${projectArtifactId}"
 	# shellcheck disable=SC2119
 	readTestPropertiesFromFile
 	echo "Application URL [${APPLICATION_URL}]"
@@ -432,7 +432,7 @@ function stageDeploy() {
 
 	# deploy app
 	deployAndRestartAppWithName "${appName}" "${appName}-${PIPELINE_VERSION}"
-	propagatePropertiesForTests "${appName} ${projectArtifactId}"
+	propagatePropertiesForTests "${appName}" "${projectArtifactId}"
 }
 
 function retrieveApplicationUrl() {
@@ -445,7 +445,7 @@ function retrieveApplicationUrl() {
 	echo "Project artifactId is ${projectArtifactId}"
 	mkdir -p "${OUTPUT_FOLDER}"
 	logInToPaas
-	propagatePropertiesForTests "${appName} ${projectArtifactId}"
+	propagatePropertiesForTests "${appName}" "${projectArtifactId}"
 	# shellcheck disable=SC2119
 	readTestPropertiesFromFile
 	echo "${APPLICATION_URL}"
