@@ -378,7 +378,7 @@ function createServiceWithName() {
 function prepareForSmokeTests() {
 	echo "Retrieving group and artifact id - it can take a while..."
 	local appName
-	appName="$(retrieveAppName)"
+	appName=$(retrieveAppName ${DEPLOYMENT_PROJECT_NAME})
 	mkdir -p "${OUTPUT_FOLDER}"
 	logInToPaas
 	propagatePropertiesForTests "${appName}"
@@ -436,7 +436,7 @@ function stageDeploy() {
 function retrieveApplicationUrl() {
 	echo "Retrieving artifact id - it can take a while..."
 	local appName
-	appName="$(retrieveAppName)"
+	appName=$(retrieveAppName ${DEPLOYMENT_PROJECT_NAME})
 	echo "Project artifactId is ${appName}"
 	mkdir -p "${OUTPUT_FOLDER}"
 	logInToPaas
@@ -479,7 +479,7 @@ function performGreenDeploymentOfTestedApplication() {
 
 function rollbackToPreviousVersion() {
 	local appName
-	appName="$(retrieveAppName)"
+	appName=$(retrieveAppName ${DEPLOYMENT_PROJECT_NAME})
 	# Log in to CF to start deployment
 	logInToPaas
 	local oldName="${appName}-venerable"
@@ -498,7 +498,7 @@ function rollbackToPreviousVersion() {
 
 function deleteBlueInstance() {
 	local appName
-	appName="$(retrieveAppName)"
+	appName=$(retrieveAppName ${DEPLOYMENT_PROJECT_NAME})
 	# Log in to CF to start deployment
 	logInToPaas
 	local oldName="${appName}-venerable"
